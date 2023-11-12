@@ -6,11 +6,9 @@ function App() {
   const [room, setRoom] = useState("");
   const [userName, setUserName] = useState("");
   const [message, setMessage] = useState("");
-  const [messageRecived, setMessageRecived] = useState("");
-  //
+  const [messages, setMessages] = useState([]);
   const [senderUserName, setSenderUserName] = useState("");
 
-  //
   const inputNameHandler = (event) => {
     setUserName(event.target.value);
     console.log(userName, "userName");
@@ -33,20 +31,33 @@ function App() {
   };
 
   const sendMessage = () => {
-    socket.emit("send_message", {
+    const newMessage = {
       message: message,
-      room: room,
       userName: userName,
+      type: "sent",
+    };
+
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+    socket.emit("send_message", {
+      ...newMessage,
+      room: room,
     });
+
+    setMessage(""); // Clear the input field after sending the message
   };
 
   useEffect(() => {
     socket.on("recived_message", (data) => {
       if (data && data.message) {
-        setMessageRecived(data.message);
-        //
+        const newMessage = {
+          message: data.message,
+          userName: data.userName,
+          type: "received",
+        };
+
+        setMessages((prevMessages) => [...prevMessages, newMessage]);
         setSenderUserName(data.userName);
-        //
         console.log(data, "data");
       }
     });
@@ -57,12 +68,19 @@ function App() {
       <input placeholder="Room..." onChange={inputRoomHandler} />
       <input placeholder="Your Name..." onChange={inputNameHandler} />
       <button onClick={joinRoom}> Join Room</button>
-      <input placeholder="Message..." onChange={inputMessageHandler} />
+      <input
+        placeholder="Message..."
+        onChange={inputMessageHandler}
+        value={message}
+      />
       <button onClick={sendMessage}>Send Message</button>
-      <h2>Message received:</h2>
-      <p>
-        message: {messageRecived} from user : {senderUserName}
-      </p>
+      <h2>Messages:</h2>
+      {messages.map((msg, index) => (
+        <p key={index}>
+          {msg.type === "sent" ? "Sent: " : "Received: "}
+          {msg.message} from user: {msg.userName}
+        </p>
+      ))}
     </div>
   );
 }

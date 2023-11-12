@@ -7,7 +7,10 @@ function App() {
   const [userName, setUserName] = useState("");
   const [message, setMessage] = useState("");
   const [messageRecived, setMessageRecived] = useState("");
+  //
+  const [senderUserName, setSenderUserName] = useState("");
 
+  //
   const inputNameHandler = (event) => {
     setUserName(event.target.value);
     console.log(userName, "userName");
@@ -41,6 +44,10 @@ function App() {
     socket.on("recived_message", (data) => {
       if (data && data.message) {
         setMessageRecived(data.message);
+        //
+        setSenderUserName(data.userName);
+        //
+        console.log(data, "data");
       }
     });
   }, [socket]);
@@ -53,7 +60,9 @@ function App() {
       <input placeholder="Message..." onChange={inputMessageHandler} />
       <button onClick={sendMessage}>Send Message</button>
       <h2>Message received:</h2>
-      {messageRecived}
+      <p>
+        message: {messageRecived} from user : {senderUserName}
+      </p>
     </div>
   );
 }

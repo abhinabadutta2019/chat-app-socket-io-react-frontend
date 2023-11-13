@@ -34,7 +34,11 @@ function App() {
     // Set up the socket event listener only once when the component mounts
     const handleReceivedMessage = (data) => {
       console.log(data, "recived_message-data");
-      setMessages((prevMessages) => [...prevMessages, data]);
+      setMessages((prevMessages) => {
+        const newMessages = [...prevMessages];
+        newMessages.push(data);
+        return newMessages;
+      });
       setRecivedSender(data.sender);
     };
 

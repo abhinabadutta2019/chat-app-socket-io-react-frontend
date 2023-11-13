@@ -3,82 +3,57 @@ import io from "socket.io-client";
 const socket = io.connect("http://localhost:3014");
 
 function App() {
+  //room state
   const [room, setRoom] = useState("");
-  const [userName, setUserName] = useState("");
-  const [message, setMessage] = useState("");
+  // Messages States
   const [messages, setMessages] = useState([]);
-  const [senderUserName, setSenderUserName] = useState("");
-
-  const inputNameHandler = (event) => {
-    setUserName(event.target.value);
-    console.log(userName, "userName");
+  const [message, setMessage] = useState("");
+  const [messageReceived, setMessageReceived] = useState("");
+  //
+  const [recivedSender, setRecivedSender] = useState("");
+  const [sender, setSender] = useState("");
+  //
+  const senderField = (event) => {
+    setSender(event.target.value);
   };
-
-  const inputMessageHandler = (event) => {
+  //
+  const messageField = (event) => {
     setMessage(event.target.value);
-    console.log(message, "message");
   };
-
-  const inputRoomHandler = (event) => {
-    setRoom(event.target.value);
-    console.log(room, "room");
-  };
-
-  const joinRoom = () => {
-    if (room !== "") {
-      socket.emit("join_room", { room: room, userName: userName });
-    }
-  };
-
+  //
   const sendMessage = () => {
-    const newMessage = {
-      message: message,
-      userName: userName,
-      type: "sent",
-    };
-
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-    socket.emit("send_message", {
-      ...newMessage,
-      room: room,
-    });
-
-    setMessage(""); // Clear the input field after sending the message
+    socket.emit("send_message", { message, sender });
+    // Clear the message input after sending
+    setMessage("");
   };
+  //
 
+  //
   useEffect(() => {
     socket.on("recived_message", (data) => {
-      if (data && data.message) {
-        const newMessage = {
-          message: data.message,
-          userName: data.userName,
-          type: "received",
-        };
-
-        setMessages((prevMessages) => [...prevMessages, newMessage]);
-        setSenderUserName(data.userName);
-        console.log(data, "data");
-      }
+      console.log(data, "recived_message-data");
+      // setMessageReceived(data.message);
+      //
+      setMessages((prevMessages) => {
+        const newMessages = [...prevMessages];
+        newMessages.push(data);
+        return newMessages;
+      });
+      setRecivedSender(data.sender);
     });
-  }, [socket]);
-
+  });
+  //
   return (
     <div>
-      <input placeholder="Room..." onChange={inputRoomHandler} />
-      <input placeholder="Your Name..." onChange={inputNameHandler} />
-      <button onClick={joinRoom}> Join Room</button>
-      <input
-        placeholder="Message..."
-        onChange={inputMessageHandler}
-        value={message}
-      />
-      <button onClick={sendMessage}>Send Message</button>
-      <h2>Messages:</h2>
+      <input placeholder="your name ..." onChange={senderField} />
+      {/*  */}
+      <input placeholder="message..." onChange={messageField} />
+      <button onClick={sendMessage}>send message</button>
+
+      {/* Display all messages */}
       {messages.map((msg, index) => (
         <p key={index}>
-          {msg.type === "sent" ? "Sent: " : "Received: "}
-          {msg.message} from user: {msg.userName}
+          {msg.message} sent by {msg.sender}
         </p>
       ))}
     </div>
